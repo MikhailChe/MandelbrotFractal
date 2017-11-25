@@ -9,7 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -109,15 +109,15 @@ public class Fractal extends JPanel implements Runnable {
 		fZoom = 100.0;
 	}
 
-	private double zoomFactor = 2;
+	private final double ZOOM_FACTOR = 2;
 
 	private void zoomIn(int x, int y) {
 		synchronized (x0) {
 			synchronized (y0) {
 				synchronized (fZoom) {
-					x0 = x0 + (x / fZoom) * (1 - 1 / zoomFactor);
-					y0 = y0 + (y / fZoom) * (1 - 1 / zoomFactor);
-					fZoom = (fZoom * zoomFactor);
+					x0 = x0 + (x / fZoom) * (1 - 1 / ZOOM_FACTOR);
+					y0 = y0 + (y / fZoom) * (1 - 1 / ZOOM_FACTOR);
+					fZoom = (fZoom * ZOOM_FACTOR);
 				}
 			}
 		}
@@ -127,9 +127,9 @@ public class Fractal extends JPanel implements Runnable {
 		synchronized (x0) {
 			synchronized (y0) {
 				synchronized (fZoom) {
-					x0 = x0 + (x / fZoom) * (1 - zoomFactor);
-					y0 = y0 + (y / fZoom) * (1 - zoomFactor);
-					fZoom = (fZoom / zoomFactor);
+					x0 = x0 + (x / fZoom) * (1 - ZOOM_FACTOR);
+					y0 = y0 + (y / fZoom) * (1 - ZOOM_FACTOR);
+					fZoom = (fZoom / ZOOM_FACTOR);
 					if (fZoom == 0) {
 						fZoom = 1.0;
 					}
@@ -138,7 +138,7 @@ public class Fractal extends JPanel implements Runnable {
 		}
 	}
 
-	Random r = new Random();
+	ThreadLocalRandom r = ThreadLocalRandom.current();
 
 	public void run() {
 		computeBuffer();
@@ -167,10 +167,8 @@ public class Fractal extends JPanel implements Runnable {
 		int width = getWidth();
 		int height = getHeight();
 
-		if (imgBuf == null
-				|| !(imgBuf.getWidth() == width && imgBuf.getHeight() == height)) {
-			BufferedImage bi = new BufferedImage(width, height,
-					BufferedImage.TYPE_INT_BGR);
+		if (imgBuf == null || !(imgBuf.getWidth() == width && imgBuf.getHeight() == height)) {
+			BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
 			bi.createGraphics().drawImage(imgBuf, 0, 0, null);
 			imgBuf = bi;
 		}
@@ -190,16 +188,13 @@ public class Fractal extends JPanel implements Runnable {
 		long tileNumX = tileManager.getTileNum(x0, fZoom);
 		long tileY = tileManager.getTileNum(y0, fZoom);
 
-		long dX = Tiles.MathFloor(x0 * fZoom
-				- tileManager.getZeroTileCoord(x0, fZoom));
-		long dY = Tiles.MathFloor(y0 * fZoom
-				- tileManager.getZeroTileCoord(y0, fZoom));
+		long dX = Tiles.MathFloor(x0 * fZoom - tileManager.getZeroTileCoord(x0, fZoom));
+		long dY = Tiles.MathFloor(y0 * fZoom - tileManager.getZeroTileCoord(y0, fZoom));
 
 		for (int x = 0; x < width + Tiles.tileDim; x += Tiles.tileDim) {
 			long tileNumY = tileY;
 			for (int y = 0; y < height + Tiles.tileDim; y += Tiles.tileDim) {
-				g.drawImage(tileManager.getTile(tileNumX, tileNumY, fZoom),
-						(int) (x - dX), (int) (y - dY), null);
+				g.drawImage(tileManager.getTile(tileNumX, tileNumY, fZoom), (int) (x - dX), (int) (y - dY), null);
 				tileNumY++;
 			}
 			tileNumX++;
