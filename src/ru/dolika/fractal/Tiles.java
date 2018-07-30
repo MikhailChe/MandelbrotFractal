@@ -32,11 +32,11 @@ public class Tiles {
 
 	public static final int tileDim = 256;
 
-	public double getZeroTileCoord(double realCoord, double zoom) {
+	public static double getZeroTileCoord(double realCoord, double zoom) {
 		return getTileNum(realCoord, zoom) * tileDim;
 	}
 
-	public long getTileNum(double realCoord, double zoom) {
+	public static long getTileNum(double realCoord, double zoom) {
 		return MathFloor(realCoord / tileDim * zoom);
 	}
 
@@ -64,7 +64,7 @@ public class Tiles {
 			try {
 				ImageIO.write(getEmptyTile(), "PNG", need);
 			} catch (Exception e) {
-				// not critical
+				e.printStackTrace();
 			}
 			Thread thread = new Thread(generator);
 			thread.setDaemon(true);
@@ -78,6 +78,7 @@ public class Tiles {
 		try {
 			img = ImageIO.read(need);
 		} catch (Exception e) {
+			e.printStackTrace();
 			return getEmptyTile();
 		}
 		return img;
@@ -99,8 +100,9 @@ public class Tiles {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			System.out.println(
-					current.getName() + " finished in " + (System.currentTimeMillis() - time) + "ms after interrupt");
+			System.out
+					.println(current.getName() + " finished in " + (System.currentTimeMillis() - time)
+							+ "ms after interrupt");
 
 		});
 
@@ -111,17 +113,21 @@ public class Tiles {
 		try {
 			generatorSemaphore.acquire();
 		} catch (InterruptedException e) {
+			e.printStackTrace();
 			// if we are interrupted, delete placeholder
 			try {
 				Files.delete(new File(outputFileName).toPath());
 			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
-			System.err.println(
-					Thread.currentThread().getName() + " interrupted before generation, so placeholder is deleted");
+			System.err
+					.println(Thread.currentThread().getName()
+							+ " interrupted before generation, so placeholder is deleted");
 
 			try {
 				Runtime.getRuntime().removeShutdownHook(shutdownHook);
 			} catch (IllegalStateException eeill) {
+				eeill.printStackTrace();
 			}
 			return;
 		}
@@ -135,10 +141,12 @@ public class Tiles {
 			// overwrite placeholder image with newly generated one
 			ImageIO.write(img, "PNG", new File(outputFileName));
 		} catch (IOException e) {
+			e.printStackTrace();
 			// if failed - try to delete placeholder
 			try {
 				Files.delete(new File(outputFileName).toPath());
 			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
 		} finally {
 			generatorSemaphore.release();
@@ -146,10 +154,11 @@ public class Tiles {
 		try {
 			Runtime.getRuntime().removeShutdownHook(shutdownHook);
 		} catch (IllegalStateException eeill) {
+			eeill.printStackTrace();
 		}
 	}
 
-	private BufferedImage generateTile(long numX, long numY, double zoom) {
+	private static BufferedImage generateTile(long numX, long numY, double zoom) {
 		BufferedImage img = new BufferedImage(tileDim, tileDim, BufferedImage.TYPE_INT_RGB);
 		for (int x = 0; x < tileDim; x++) {
 			for (int y = 0; y < tileDim; y++) {
@@ -186,11 +195,11 @@ public class Tiles {
 		return img;
 	}
 
-	private String tileToFile(long numX, long numY, double zoom) {
+	private static String tileToFile(long numX, long numY, double zoom) {
 		return tileToDirectory(zoom) + "tile-" + numX + "-" + numY + ".png";
 	}
 
-	private String tileToDirectory(double zoom) {
+	private static String tileToDirectory(double zoom) {
 		return ".fractal/cache/" + zoom + "/";
 	}
 
@@ -203,10 +212,12 @@ public class Tiles {
 			g.setColor(Color.white);
 			g.fillRect(0, 0, tileDim, tileDim);
 			g.setColor(Color.BLACK);
-			g.drawLine(_emptyTile.getWidth() / 4, _emptyTile.getWidth() / 4, _emptyTile.getWidth() * 3 / 4,
-					_emptyTile.getWidth() * 3 / 4);
-			g.drawLine(_emptyTile.getWidth() / 4, _emptyTile.getWidth() * 3 / 4, _emptyTile.getWidth() * 3 / 4,
-					_emptyTile.getWidth() / 4);
+			g
+					.drawLine(_emptyTile.getWidth() / 4, _emptyTile.getWidth() / 4, _emptyTile.getWidth() * 3 / 4,
+							_emptyTile.getWidth() * 3 / 4);
+			g
+					.drawLine(_emptyTile.getWidth() / 4, _emptyTile.getWidth() * 3 / 4, _emptyTile.getWidth() * 3 / 4,
+							_emptyTile.getWidth() / 4);
 		}
 		return _emptyTile;
 	}
@@ -214,13 +225,11 @@ public class Tiles {
 	public static long MathFloor(double value) {
 		if (value >= 0) {
 			return ((long) value);
-		} else {
-			if ((long) value == value) {
-				return ((long) value);
-			} else {
-				return ((long) (value - 1));
-			}
 		}
+		if ((long) value == value) {
+			return ((long) value);
+		}
+		return ((long) (value - 1));
 	}
 
 }

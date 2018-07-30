@@ -8,24 +8,24 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.WindowConstants;
 
 public class Fractal extends JPanel implements Runnable {
 
 	private static final long serialVersionUID = -4151180503983659941L;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		JFrame frame = new JFrame("Fractal");
 		Fractal fractal = new Fractal();
 		frame.setLayout(new BorderLayout());
 		frame.setContentPane(fractal);
 		frame.pack();
 		frame.setVisible(true);
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		fractal.run();
 	}
 
@@ -48,11 +48,6 @@ public class Fractal extends JPanel implements Runnable {
 
 			int oldX = -1;
 			int oldY = -1;
-
-			@Override
-			public void mouseReleased(MouseEvent arg0) {
-
-			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
@@ -92,14 +87,14 @@ public class Fractal extends JPanel implements Runnable {
 
 	}
 
-	protected void decColMult() {
+	protected static void decColMult() {
 		COLOR_MULT -= 1;
 		if (COLOR_MULT <= 2) {
 			COLOR_MULT = 2;
 		}
 	}
 
-	protected void incColMult() {
+	protected static void incColMult() {
 		COLOR_MULT += 1;
 	}
 
@@ -111,7 +106,7 @@ public class Fractal extends JPanel implements Runnable {
 
 	private final double ZOOM_FACTOR = 2;
 
-	private void zoomIn(int x, int y) {
+	void zoomIn(int x, int y) {
 		synchronized (x0) {
 			synchronized (y0) {
 				synchronized (fZoom) {
@@ -123,7 +118,7 @@ public class Fractal extends JPanel implements Runnable {
 		}
 	}
 
-	private void zoomOut(int x, int y) {
+	void zoomOut(int x, int y) {
 		synchronized (x0) {
 			synchronized (y0) {
 				synchronized (fZoom) {
@@ -140,6 +135,7 @@ public class Fractal extends JPanel implements Runnable {
 
 	ThreadLocalRandom r = ThreadLocalRandom.current();
 
+	@Override
 	public void run() {
 		computeBuffer();
 		repaint();
@@ -149,6 +145,7 @@ public class Fractal extends JPanel implements Runnable {
 			try {
 				Thread.sleep(1000 / 50);
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			repaint();
 			if (System.currentTimeMillis() - time > 1000 / 20) {
@@ -185,11 +182,11 @@ public class Fractal extends JPanel implements Runnable {
 			}
 		}
 
-		long tileNumX = tileManager.getTileNum(x0, fZoom);
-		long tileY = tileManager.getTileNum(y0, fZoom);
+		long tileNumX = Tiles.getTileNum(x0, fZoom);
+		long tileY = Tiles.getTileNum(y0, fZoom);
 
-		long dX = Tiles.MathFloor(x0 * fZoom - tileManager.getZeroTileCoord(x0, fZoom));
-		long dY = Tiles.MathFloor(y0 * fZoom - tileManager.getZeroTileCoord(y0, fZoom));
+		long dX = Tiles.MathFloor(x0 * fZoom - Tiles.getZeroTileCoord(x0, fZoom));
+		long dY = Tiles.MathFloor(y0 * fZoom - Tiles.getZeroTileCoord(y0, fZoom));
 
 		for (int x = 0; x < width + Tiles.tileDim; x += Tiles.tileDim) {
 			long tileNumY = tileY;
